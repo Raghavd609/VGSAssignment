@@ -22,5 +22,8 @@
     "express": "^4.19.2",
     "node-fetch": "^3.3.2",
     "stripe": "^15.0.0"
+  },
+  "engines": {
+    "node": "16.x"
   }
 }

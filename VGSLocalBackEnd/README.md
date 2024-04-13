@@ -1,26 +1,48 @@
 # VGSAssignment
+Assignment for VGS
 
-This project implements a secure payment processing system using Very Good Security (VGS) and Stripe to handle and tokenize sensitive payment information.
 
-## Features
+# Bob's Hamburgers Payment System Demo
 
-- Secure payment information handling.
-- Integration with VGS for data tokenization.
-- Payment processing via Stripe API.
+This repository contains a demo application for Bob's Hamburgers, a fictional burger shop, showcasing the use of Very Good Security (VGS) proxies for secure credit card data handling and payment processing using Stripe.
 
-## Prerequisites
+## Introduction
 
-Before you begin, ensure you have met the following requirements:
-- You have installed the latest version of [Node.js](https://nodejs.org/).
-- You have a Windows/Linux/Mac machine.
-- You have read access to the necessary APIs (VGS and Stripe).
+The application simulates a credit card collection and payment process using VGS Inbound and Outbound proxies. It demonstrates how businesses like Bob's Hamburgers can securely tokenize credit card data before it touches their servers and safely transmit tokenized data to payment processors such as Stripe.
 
-## Installing VGSAssignment
+### How It Works
 
-To install VGSAssignment, follow these steps:
+- **VGS Inbound Proxy**: Collects and tokenizes credit card data from the frontend.
+- **VGS Outbound Proxy**: Reveals tokenized data to Stripe for payment processing.
 
-Linux and macOS:
-```bash
-git clone https://github.com/yourusername/VGSAssignment.git
-cd VGSAssignment
-npm install
+## Project Structure
+
+- `VGSLocalFrontEnd`: Contains the frontend interface where customers can enter their payment details.
+- `VGSLocalBackEnd`: Hosts the server logic for handling API requests, interacting with VGS proxies, and processing payments via Stripe.
+
+## Requirements
+
+- Node.js
+- Access to a VGS sandbox environment
+- Stripe account for payment processing
+
+## Quick Start
+
+### Setting Up and Running Locally
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/yourusername/VGSAssignment.git
+   cd VGSAssignment
+2. Install dependencies:
+   cd VGSLocalBackEnd
+   npm install
+
+3.Configure Environment Variables:
+   STRIPE_SECRET_KEY=your_stripe_secret_key
+   VGS_ACCESS_CREDENTIALS=your_vgs_access_credentials
+   
+4.Start the Server:
+   Run the following command to start your server and begin serving the application locally:
+   npm start
+
