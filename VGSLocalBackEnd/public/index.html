@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bob's Hamburgers Payment Form</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <h1>Bob's Hamburgers Payment Form</h1>
+    <form id="paymentForm">
+        <label for="cc_number">Card Number:</label>
+        <input type="text" id="cc_number" name="cc_number" required><br><br>
+        <label for="cc_exp">Expiration Date:</label>
+        <input type="text" id="cc_exp" name="cc_exp" required><br><br>
+        <label for="cc_cvv">CVV:</label>
+        <input type="text" id="cc_cvv" name="cc_cvv" required><br><br>
+        <button type="submit">Submit Payment</button>
+    </form>
+
+    <script>
+        document.getElementById('paymentForm').addEventListener('submit', async function (event) {
+            event.preventDefault();
+
+            const formData = new FormData(event.target);
+            const data = {
+                cc_number: formData.get('cc_number'),
+                cc_exp: formData.get('cc_exp'),
+                cc_cvv: formData.get('cc_cvv')
+            };
+
+            try {
+                // Send data to VGS for tokenization
+                const vgsResponse = await axios.post('https://tntkmaqsnf9.sandbox.verygoodproxy.com/post', data, {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (vgsResponse.status === 200) {
+                    console.log('Tokenized data received:', vgsResponse.data);
+
+                    // Forward the tokenized data to the backend server
+                    const backendResponse = await axios.post('http://localhost:3000/process-payment', vgsResponse.data, {
+                        headers: {
+                            'Content-Type': 'application/json' // Ensure backend expects JSON
+                        }
+                    });
+
+                    if (backendResponse.status === 200) {
+                        alert('Payment successful!');
+                    } else {
+                        alert('Payment failed. Please try again. Error: ' + backendResponse.data.message);
+                    }
+                } else {
+                    alert('Failed to tokenize data. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error during the payment process:', error);
+                alert('An error occurred. Please try again later.');
+            }
+        });
+    </script>
+</body>
+</html>
