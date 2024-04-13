@@ -8,7 +8,7 @@
 </head>
 <body>
     <h1>Bob's Hamburgers Payment Form</h1>
-    <form id="paymentForm">
+    <form id="paymentForm" action="https://obscure-ridge-01877-977849a2ea6b.herokuapp.com/process-payment" method="POST">
         <label for="cc_number">Card Number:</label>
         <input type="text" id="cc_number" name="cc_number" required><br><br>
         <label for="cc_exp">Expiration Date:</label>
@@ -41,7 +41,7 @@
                     console.log('Tokenized data received:', vgsResponse.data);
 
                     // Forward the tokenized data to the backend server
-                    const backendResponse = await axios.post('http://localhost:3000/process-payment', vgsResponse.data, {
+                    const backendResponse = await axios.post('https://obscure-ridge-01877-977849a2ea6b.herokuapp.com/process-payment', vgsResponse.data, {
                         headers: {
                             'Content-Type': 'application/json' // Ensure backend expects JSON
                         }
