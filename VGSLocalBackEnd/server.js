@@ -3,6 +3,7 @@ const stripe = require('stripe')('sk_test_51Lrs6CK6opjUgeSmFHReX14eBMcbofCJrUOis
 const cors = require('cors');
 const path = require('path');
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+const PORT = process.env.PORT || 3000;
 
 const app = express();
 app.use(cors()); // Enable CORS for all domains
@@ -72,4 +73,6 @@ app.post('/process-payment', async (req, res) => {
     }
 });
 
-app.listen(3000, () => console.log('Server running on port 3000'));
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
