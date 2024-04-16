@@ -63,8 +63,8 @@ app.post('/process-payment', async (req, res) => {
         const paymentData = {
             card: {
                 number: cc_number,
-                exp_month: cc_exp.split('/')[0].trim(),
-                exp_year: cc_exp.split('/')[1].trim(),
+                exp_month: parseInt(cc_exp.substring(0, 2)), // Extract month part and parse as integer
+                exp_year: parseInt('20' + cc_exp.substring(3)), // Extract year part and parse as integer
                 cvc: cc_cvv
             }
         };
