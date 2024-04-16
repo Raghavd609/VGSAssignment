@@ -37,12 +37,22 @@ function getProxyAgent() {
 app.post('/process-payment', async (req, res) => {
     console.log('Received tokenized payment data:', req.body);
 
+    // Extract required fields from the incoming request body
+    const { cc_number, cc_exp, cc_cvv } = req.body;
+
     try {
         // Get proxy agent
         const agent = getProxyAgent();
 
+        // Prepare data to be sent to the outbound route
+        const outboundData = {
+            cc_number,
+            cc_exp,
+            cc_cvv
+        };
+
         // Forward tokenized payment data to VGS for detokenization
-        const vgsResponse = await axios.post('https://tntkmaqsnf9.sandbox.verygoodproxy.com/post', req.body, {
+        const vgsResponse = await axios.post('https://tntkmaqsnf9.sandbox.verygoodproxy.com/post', outboundData, {
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -51,27 +61,8 @@ app.post('/process-payment', async (req, res) => {
 
         console.log('Detokenized data received from VGS:', vgsResponse.data);
 
-        // Process payment using detokenized data
-        const stripe = require('stripe')('sk_test_4eC39HqLyjWDarjtT1zdp7dc');
-        console.log('Creating payment method with detokenized card data:', vgsResponse.data);
-        const paymentMethod = await stripe.paymentMethods.create({
-            type: 'card',
-            card: vgsResponse.data, // Use detokenized card data received from VGS
-        });
-
-        console.log('Payment method created:', paymentMethod);
-
-        // Create payment intent using payment method
-        console.log('Creating payment intent with payment method:', paymentMethod.id);
-        const paymentIntent = await stripe.paymentIntents.create({
-            amount: 2000,
-            currency: 'usd',
-            payment_method: paymentMethod.id, // Use the ID of the created payment method
-            confirm: true, // Confirm the payment immediately
-        });
-
-        console.log('Payment intent created:', paymentIntent);
-
+        // Further processing steps...
+        
         res.status(200).json({ message: 'Payment processed successfully' });
     } catch (error) {
         console.error('Error processing payment:', error.message);
