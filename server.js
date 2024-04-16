@@ -48,34 +48,34 @@ function getProxyAgent() {
 }
 
 app.post('/process-payment', async (req, res) => {
-    console.log('Received tokenized payment data:', req.body);
+    console.log('Received payment data:', req.body);
 
     // Extract required fields from the incoming request body
-    const { cc_number, cc_exp, cc_cvv } = req.body;
+    const { cardNumber, cardExpirationDate, cardSecurityCode } = req.body;
 
     try {
         // Get proxy agent
         const agent = getProxyAgent();
 
         // Prepare data to be sent to the outbound route
-        const outboundData = {
-            cc_number,
-            cc_exp,
-            cc_cvv
+        const paymentData = {
+            'card-number': cardNumber,
+            'card-expiration-date': cardExpirationDate,
+            'card-security-code': cardSecurityCode
         };
 
-        // Forward tokenized payment data to VGS for detokenization
-        const vgsResponse = await axios.post('https://tntkmaqsnf9.sandbox.verygoodproxy.com/post', outboundData, {
+        // Forward payment data to VGS for processing
+        const vgsResponse = await axios.post('https://tntkmaqsnf9.sandbox.verygoodproxy.com/post', paymentData, {
             headers: {
                 'Content-Type': 'application/json'
             },
             httpsAgent: agent // Use the proxy agent
         });
 
-        console.log('Detokenized data received from VGS:', vgsResponse.data);
+        console.log('Response from VGS:', vgsResponse.data);
 
         // Further processing steps...
-        
+
         res.status(200).json({ message: 'Payment processed successfully' });
     } catch (error) {
         console.error('Error processing payment:', error.message);
