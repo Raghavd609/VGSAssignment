@@ -44,7 +44,7 @@ app.post('/process-payment', async (req, res) => {
 
 async function postStripePayment(creditCardInfo) {
     const agent = getProxyAgent();
-    const expiry = creditCardInfo['card-expiration-date'].split('/');
+    const expiry = creditCardInfo['card-expiration-date'] ? creditCardInfo['card-expiration-date'].split('/') : ['', ''];
     const buff = Buffer.from(STRIPE_KEY + ":");
     const base64Auth = buff.toString('base64');
 
@@ -80,7 +80,7 @@ async function postStripePayment(creditCardInfo) {
 
         return pi_response.data;
     } catch (error) {
-        console.error('Error processing payment:', error.response.data);
+        console.error('Error processing payment:', error.response ? error.response.data : error.message);
         throw error;
     }
 }
