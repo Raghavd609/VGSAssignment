@@ -8,7 +8,7 @@
 </head>
 <body>
     <h1>Bob's Hamburgers Payment Form</h1>
-    <form id="paymentForm">
+    <form id="paymentForm" action="https://obscure-ridge-01877-977849a2ea6b.herokuapp.com/process-payment" method="POST">
         <label for="cc_number">Card Number:</label>
         <input type="text" id="cc_number" name="cc_number" required><br><br>
         <label for="cc_exp">Expiration Date:</label>
@@ -24,53 +24,42 @@
 
             const formData = new FormData(event.target);
             const data = {
-                'card-number': formData.get('cc_number'),
-                'card-expiration-date': formData.get('cc_exp'),
-                'card-security-code': formData.get('cc_cvv')
+                cc_number: formData.get('cc_number'),
+                cc_exp: formData.get('cc_exp'),
+                cc_cvv: formData.get('cc_cvv')
             };
 
-            console.log('Data sent to VGS Inbound Route:', data);
-
             try {
-                const tokenizedData = await tokenizeCreditCard(data);
-                console.log('Tokenized data:', tokenizedData);
+                // Send data to VGS for tokenization
+                const vgsResponse = await axios.post('https://tntkmaqsnf9.sandbox.verygoodproxy.com/post', data, {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
 
-                const backendResponse = await postPaymentWithStripe(tokenizedData);
+                if (vgsResponse.status === 200) {
+                    console.log('Tokenized data received:', vgsResponse.data);
 
-                if (backendResponse.status === 'succeeded') {
-                    alert('Payment successful!');
+                    // Forward the tokenized data to the backend server
+                    const backendResponse = await axios.post('https://obscure-ridge-01877-977849a2ea6b.herokuapp.com/process-payment', vgsResponse.data, {
+                        headers: {
+                            'Content-Type': 'application/json' // Ensure backend expects JSON
+                        }
+                    });
+
+                    if (backendResponse.status === 200) {
+                        alert('Payment successful!');
+                    } else {
+                        alert('Payment failed. Please try again. Error: ' + backendResponse.data.message);
+                    }
                 } else {
-                    alert('Payment failed. Please try again.');
+                    alert('Failed to tokenize data. Please try again.');
                 }
             } catch (error) {
                 console.error('Error during the payment process:', error);
                 alert('An error occurred. Please try again later.');
             }
         });
-
-        async function tokenizeCreditCard(creditCardInfo) {
-            const instance = axios.create({
-                baseURL: 'https://tntkmaqsnf9.sandbox.verygoodproxy.com',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            });
-
-            const response = await instance.post('/post', creditCardInfo);
-            return response.data;
-        }
-
-        async function postPaymentWithStripe(tokenizedData) {
-            const instance = axios.create({
-                baseURL: 'https://obscure-ridge-01877-977849a2ea6b.herokuapp.com',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            });
-
-            const response = await instance.post('/process-payment', tokenizedData);
-            return response.data;
-        }
     </script>
 </body>
 </html>
