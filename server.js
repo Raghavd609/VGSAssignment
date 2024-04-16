@@ -2,6 +2,7 @@ const express = require('express');
 const axios = require('axios');
 const tunnel = require('tunnel');
 const qs = require('qs');
+const path = require('path'); // Import the 'path' module
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -12,6 +13,7 @@ const VGS_PASSWORD = '6563291f-aaec-49c4-b63f-45fbbc0e1fe3';
 const STRIPE_KEY = 'sk_test_51Lrs6CK6opjUgeSmFHReX14eBMcbofCJrUOisGTC7ASpkfFMqD6Eysbs83qBC12YZErV3nv1Pg4UTy9WRhPRVUpQ00o7cUrV8I';
 
 app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public'))); // Serve static files from the 'public' directory
 
 console.log(`Outbound route certificate is stored at this path: ${process.env['NODE_EXTRA_CA_CERTS']}`);
 
@@ -80,6 +82,11 @@ async function postStripePayment(creditCardInfo) {
         throw error;
     }
 }
+
+// Add a route to serve the HTML file
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
