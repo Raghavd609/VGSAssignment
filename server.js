@@ -2,6 +2,7 @@ const express = require('express');
 const axios = require('axios');
 const tunnel = require('tunnel');
 const qs = require('qs');
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -31,6 +32,12 @@ function getProxyAgent() {
 }
 
 app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Route handler for serving the payment form
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 // Route handler for processing payment
 app.post('/process-payment', async (req, res) => {
@@ -78,11 +85,6 @@ app.post('/process-payment', async (req, res) => {
         console.error('Error during payment processing:', error);
         res.status(500).send('An error occurred during payment processing');
     }
-});
-
-// Route handler for the root URL
-app.get('/', (req, res) => {
-    res.send('Welcome to the payment processing server');
 });
 
 app.listen(PORT, () => {
