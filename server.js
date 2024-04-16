@@ -2,7 +2,7 @@ const express = require('express');
 const axios = require('axios');
 const tunnel = require('tunnel');
 const qs = require('qs');
-const path = require('path'); // Import the 'path' module
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -13,7 +13,7 @@ const VGS_PASSWORD = '6563291f-aaec-49c4-b63f-45fbbc0e1fe3';
 const STRIPE_KEY = 'sk_test_51Lrs6CK6opjUgeSmFHReX14eBMcbofCJrUOisGTC7ASpkfFMqD6Eysbs83qBC12YZErV3nv1Pg4UTy9WRhPRVUpQ00o7cUrV8I';
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public'))); // Serve static files from the 'public' directory
+app.use(express.static(path.join(__dirname, 'public')));
 
 console.log(`Outbound route certificate is stored at this path: ${process.env['NODE_EXTRA_CA_CERTS']}`);
 
@@ -57,6 +57,8 @@ async function postStripePayment(creditCardInfo) {
     });
 
     try {
+        console.log('Credit card info received:', creditCardInfo);
+
         const pm_response = await instance.post('/v1/payment_methods', qs.stringify({
             type: 'card',
             card: {
@@ -66,7 +68,7 @@ async function postStripePayment(creditCardInfo) {
                 exp_year: expiry[1].trim()
             }
         }));
-        console.log(pm_response.data);
+        console.log('Payment method response:', pm_response.data);
 
         const pi_response = await instance.post('/v1/payment_intents', qs.stringify({
             amount: 100,
@@ -74,7 +76,7 @@ async function postStripePayment(creditCardInfo) {
             payment_method: pm_response.data.id,
             confirm: true
         }));
-        console.log(pi_response.data);
+        console.log('Payment intent response:', pi_response.data);
 
         return pi_response.data;
     } catch (error) {
@@ -83,7 +85,6 @@ async function postStripePayment(creditCardInfo) {
     }
 }
 
-// Add a route to serve the HTML file
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
