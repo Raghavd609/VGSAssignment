@@ -1,71 +1,68 @@
 const express = require('express');
-const stripe = require('stripe')('sk_test_51Lrs6CK6opjUgeSmFHReX14eBMcbofCJrUOisGTC7ASpkfFMqD6Eysbs83qBC12YZErV3nv1Pg4UTy9WRhPRVUpQ00o7cUrV8I');
-const cors = require('cors');
-const path = require('path');
-const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
-const PORT = process.env.PORT || 3000;
+const axios = require('axios');
+const tunnel = require('tunnel');
+const qs = require('qs');
 
 const app = express();
-app.use(cors()); // Enable CORS for all domains
-app.use(express.json()); // Middleware for parsing JSON bodies
+const PORT = process.env.PORT || 3000;
 
-// Serve static files from 'public' directory where your HTML file is located
-app.use(express.static('public'));
+const VGS_VAULT_ID = 'tntkmaqsnf9';
+const VGS_USERNAME = 'USpDfWz23n8FGztYxzi5RNDa';
+const VGS_PASSWORD = '6563291f-aaec-49c4-b63f-45fbbc0e1fe3';
+const STRIPE_KEY = 'sk_test_51Lrs6CK6opjUgeSmFHReX14eBMcbofCJrUOisGTC7ASpkfFMqD6Eysbs83qBC12YZErV3nv1Pg4UTy9WRhPRVUpQ00o7cUrV8I';
 
-// Optional: Specific route to serve the HTML file
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
+console.log(`Outbound route certificate is stored at this path: ${process.env['NODE_EXTRA_CA_CERTS']}`);
+
+function getProxyAgent() {
+    const vgs_outbound_url = `${VGS_VAULT_ID}.sandbox.verygoodproxy.com`;
+    console.log(`Sending request through outbound Route: ${vgs_outbound_url}`);
+    return tunnel.httpsOverHttps({
+        proxy: {
+            servername: vgs_outbound_url,
+            host: vgs_outbound_url,
+            port: 8443,
+            proxyAuth: `${VGS_USERNAME}:${VGS_PASSWORD}`
+        },
+    });
+}
+
+app.use(express.json());
 
 app.post('/process-payment', async (req, res) => {
-    const tokenizedData = req.body;
-    console.log('Received tokenized data:', tokenizedData);
+    const creditCardInfo = req.body;
+    console.log('Received credit card info:', creditCardInfo);
 
     try {
-        const username = 'USpDfWz23n8FGztYxzi5RNDa';
-        const password = '6563291f-aaec-49c4-b63f-45fbbc0e1fe3';
-        const auth = 'Basic ' + Buffer.from(username + ':' + password).toString('base64');
+        let agent = getProxyAgent();
+        let expiry = creditCardInfo['cc_exp'].split('/');
 
-        console.log('Making outbound call');
-        const vgsResponse = await fetch('https://USpDfWz23n8FGztYxzi5RNDa:6563291f-aaec-49c4-b63f-45fbbc0e1fe3@tntsfeqzp4a.sandbox.verygoodproxy.com:8443', {
-            method: 'POST',
+        const instance = axios.create({
+            baseURL: 'https://api.stripe.com',
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': auth
+                'Authorization': `Bearer ${STRIPE_KEY}`,
+                'Content-Type': 'application/x-www-form-urlencoded'
             },
-            body: JSON.stringify(tokenizedData)
+            httpsAgent: agent,
         });
 
-        if (!vgsResponse.ok) {
-            const errorMessage = await vgsResponse.text();
-            console.error('Failed to de-tokenize data:', errorMessage);
-            return res.status(500).send('Failed to process payment');
-        }
-
-        const cardDetails = await vgsResponse.json();
-        console.log('De-tokenized card details received:', cardDetails);
-
-        // Create a payment method with Stripe
-        const paymentMethod = await stripe.paymentMethods.create({
+        let pm_response = await instance.post('/v1/payment_methods', qs.stringify({
             type: 'card',
             card: {
-                number: cardDetails.cc_number,
-                exp_month: parseInt(cardDetails.cc_exp.split('/')[0]),
-                exp_year: parseInt(cardDetails.cc_exp.split('/')[1]),
-                cvc: cardDetails.cc_cvv
+                number: creditCardInfo['cc_number'],
+                cvc: creditCardInfo['cc_cvv'],
+                exp_month: expiry[0].trim(),
+                exp_year: expiry[1].trim()
             }
-        });
-        console.log('Payment method created:', paymentMethod.id);
+        }));
+        console.log('Payment method created:', pm_response.data);
 
-        // Create and confirm a payment intent with Stripe
-        const paymentIntent = await stripe.paymentIntents.create({
-            amount: 2000, // Amount in cents, e.g., $20.00
+        let pi_response = await instance.post('/v1/payment_intents', qs.stringify({
+            amount: 100,
             currency: 'usd',
-            payment_method: paymentMethod.id,
-            confirmation_method: 'automatic',
+            payment_method: pm_response.data.id,
             confirm: true
-        });
-        console.log('Payment intent processed:', paymentIntent.id);
+        }));
+        console.log('Payment intent processed:', pi_response.data);
 
         res.status(200).send('Payment processed successfully');
     } catch (error) {
