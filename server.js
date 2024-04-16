@@ -53,7 +53,7 @@ app.post('/process-payment', async (req, res) => {
         });
 
         // Send card info to payment_methods endpoint
-        const pm_response = await instance.post('/v1/payment_methods', qs.stringify({
+        const pm_request_data = qs.stringify({
             type: 'card',
             card: {
                 number: creditCardInfo['cc_number'],
@@ -61,21 +61,34 @@ app.post('/process-payment', async (req, res) => {
                 exp_month: creditCardInfo['cc_exp_month'], // Assuming separate fields for month and year
                 exp_year: creditCardInfo['cc_exp_year']
             }
-        }));
+        });
+
+        console.log('Sending request to Stripe Payment Methods API:', pm_request_data);
+
+        const pm_response = await instance.post('/v1/payment_methods', pm_request_data);
         console.log('Payment method created:', pm_response.data);
 
         // Use the payment method to post a payment using the payment_intents endpoint
-        const pi_response = await instance.post('/v1/payment_intents', qs.stringify({
+        const pi_request_data = qs.stringify({
             amount: 100, // Sample amount
             currency: 'usd',
             payment_method: pm_response.data.id,
             confirm: true
-        }));
+        });
+
+        console.log('Sending request to Stripe Payment Intents API:', pi_request_data);
+
+        const pi_response = await instance.post('/v1/payment_intents', pi_request_data);
         console.log('Payment intent processed:', pi_response.data);
 
         res.status(200).send('Payment processed successfully');
     } catch (error) {
         console.error('Error during payment processing:', error);
+        if (error.response) {
+            console.error('Response data:', error.response.data);
+            console.error('Response status:', error.response.status);
+            console.error('Response headers:', error.response.headers);
+        }
         res.status(500).send('An error occurred during payment processing');
     }
 });
