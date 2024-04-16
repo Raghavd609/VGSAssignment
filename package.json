@@ -4,8 +4,7 @@
   "description": "Backend server for handling payment tokenization and processing using VGS and Stripe.",
   "main": "server.js",
   "scripts": {
-    "//": "The NODE_EXTRA_CA_CERTS environment variable needs to be set before starting the server to allow NodeJS to proxy requests through the VGS outbound route. More details can be found here: https://www.verygoodsecurity.com/docs/guides/outbound-connection#outbound-connection",
-    "start": "NODE_EXTRA_CA_CERTS=$(pwd)/outbound-route-sandbox.pem node server", // Updated start script
+    "start": "NODE_EXTRA_CA_CERTS=$(pwd)/outbound-route-sandbox.pem node server",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -29,4 +28,3 @@
   "engines": {
     "node": "16.x"
   }
-}
