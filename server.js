@@ -2,11 +2,13 @@ const express = require('express');
 const axios = require('axios');
 const tunnel = require('tunnel');
 const qs = require('querystring');
+const path = require('path');
 
 const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public'))); // Serve static files from the 'public' directory
 
 console.log(`Outbound route certificate is stored at this path: ${process.env['NODE_EXTRA_CA_CERTS']}`);
 
@@ -71,6 +73,10 @@ app.post('/process-payment', async (req, res) => {
         console.error('Error processing payment:', error.message);
         res.status(500).json({ error: 'An error occurred while processing payment.' });
     }
+});
+
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html')); // Serve the HTML file
 });
 
 app.listen(port, () => {
