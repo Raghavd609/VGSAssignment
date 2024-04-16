@@ -8,7 +8,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Define paths for Express config
-const publicDirectoryPath = path.join(__dirname, '../public');
+const publicDirectoryPath = path.join(__dirname, 'public');
 
 const VGS_VAULT_ID = 'tntkmaqsnf9';
 const VGS_USERNAME = 'USpDfWz23n8FGztYxzi5RNDa';
