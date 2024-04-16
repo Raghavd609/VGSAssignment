@@ -51,7 +51,7 @@ app.post('/process-payment', async (req, res) => {
     console.log('Received payment data:', req.body);
 
     // Extract required fields from the incoming request body
-    const { cardNumber, cardExpirationDate, cardSecurityCode } = req.body;
+        const { cc_number, cc_exp, cc_cvv } = req.body;
 
     try {
         // Get proxy agent
@@ -59,9 +59,9 @@ app.post('/process-payment', async (req, res) => {
 
         // Prepare data to be sent to the outbound route
         const paymentData = {
-            'card-number': cardNumber,
-            'card-expiration-date': cardExpirationDate,
-            'card-security-code': cardSecurityCode
+            'card-number': cc_number,
+            'card-expiration-date': cc_exp,
+            'card-security-code': cc_cvv
         };
 
         // Forward payment data to VGS for processing
