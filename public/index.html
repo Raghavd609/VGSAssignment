@@ -40,8 +40,11 @@
                 if (vgsResponse.status === 200) {
                     console.log('Tokenized data received:', vgsResponse.data);
 
+                    // Extract the data section from the response
+                    const tokenizedData = JSON.parse(vgsResponse.data.data);
+
                     // Forward the tokenized data to the backend server
-                    const backendResponse = await axios.post('https://obscure-ridge-01877-977849a2ea6b.herokuapp.com/process-payment', vgsResponse.data, {
+                    const backendResponse = await axios.post('https://obscure-ridge-01877-977849a2ea6b.herokuapp.com/process-payment', tokenizedData, {
                         headers: {
                             'Content-Type': 'application/json' // Ensure backend expects JSON
                         }
