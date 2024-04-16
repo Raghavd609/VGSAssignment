@@ -22,12 +22,12 @@ app.post('/process-payment', async (req, res) => {
     console.log('Received tokenized data:', tokenizedData);
 
     try {
-        const username = 'example12@motterblue.com';
-        const password = 'pirvUk-vigpeh-pinnu6';
+        const username = 'USpDfWz23n8FGztYxzi5RNDa';
+        const password = '6563291f-aaec-49c4-b63f-45fbbc0e1fe3';
         const auth = 'Basic ' + Buffer.from(username + ':' + password).toString('base64');
 
         console.log('Making outbound call');
-        const vgsResponse = await fetch('https://tntkmaqsnf9.sandbox.verygoodproxy.com:8443', {
+        const vgsResponse = await fetch('https://USpDfWz23n8FGztYxzi5RNDa:6563291f-aaec-49c4-b63f-45fbbc0e1fe3@tntsfeqzp4a.sandbox.verygoodproxy.com:8443', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -37,7 +37,8 @@ app.post('/process-payment', async (req, res) => {
         });
 
         if (!vgsResponse.ok) {
-            console.error('Failed to de-tokenize data:', await vgsResponse.text());
+            const errorMessage = await vgsResponse.text();
+            console.error('Failed to de-tokenize data:', errorMessage);
             return res.status(500).send('Failed to process payment');
         }
 

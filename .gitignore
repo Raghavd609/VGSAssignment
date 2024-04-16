@@ -1,21 +1,29 @@
-# Dependency directories
+# Node.js
 node_modules/
 
-# Environment configuration
+# Build files
+dist/
+build/
+
+# Logs and databases
+*.log
+*.sqlite
+*.db
+
+# Environment variables
 .env
 
-# Production build files
-/dist
+# IDE files
+.vscode/
+.idea/
 
-# OS generated files
+# Dependency lock files
+package-lock.json
+yarn.lock
+
+# Miscellaneous
 .DS_Store
 Thumbs.db
 
-# Editor directories and files
-.idea/
-*.sublime-workspace
-
-# Logs
-logs
-*.log
-npm-debug.log*
+# Secure files
+sandbox.pem
