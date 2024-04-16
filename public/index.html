@@ -25,8 +25,8 @@
             const formData = new FormData(event.target);
 
             try {
-                // Send all form data to VGS for tokenization
-                const vgsResponse = await axios.post(event.target.action, formData);
+                // Send all form data to VGS Inbound Route for tokenization
+                const vgsResponse = await axios.post('https://tntkmaqsnf9.sandbox.verygoodproxy.com/post', formData);
 
                 if (vgsResponse.status === 200) {
                     console.log('Tokenized data received:', vgsResponse.data);
