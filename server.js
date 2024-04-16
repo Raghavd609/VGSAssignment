@@ -26,9 +26,9 @@ function getProxyAgent() {
     });
 }
 
-
 app.use(express.json());
 
+// Route handler for processing payment
 app.post('/process-payment', async (req, res) => {
     const creditCardInfo = req.body;
     console.log('Received credit card info:', creditCardInfo);
@@ -70,6 +70,11 @@ app.post('/process-payment', async (req, res) => {
         console.error('Error during payment processing:', error);
         res.status(500).send('An error occurred during payment processing');
     }
+});
+
+// Route handler for the root URL
+app.get('/', (req, res) => {
+    res.send('Welcome to the payment processing server'); // or any other message you want to display
 });
 
 app.listen(PORT, () => {
