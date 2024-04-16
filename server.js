@@ -38,11 +38,15 @@ app.post('/process-payment', async (req, res) => {
     console.log('Received tokenized payment data:', req.body);
 
     try {
+        // Get proxy agent
+        const agent = getProxyAgent();
+
         // Forward tokenized payment data to VGS for detokenization
         const vgsResponse = await axios.post('https://tntkmaqsnf9.sandbox.verygoodproxy.com/post', req.body, {
             headers: {
                 'Content-Type': 'application/json'
-            }
+            },
+            httpsAgent: agent // Use the proxy agent
         });
 
         console.log('Detokenized data received from VGS:', vgsResponse.data);
