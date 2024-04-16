@@ -12,12 +12,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 console.log(`Outbound route certificate is stored at this path: ${process.env['NODE_EXTRA_CA_CERTS']}`);
 
-// Middleware to log incoming data from the front end
-app.use((req, res, next) => {
-    console.log('Incoming data from front end:', req.body);
-    next();
-});
-
 // Function to get proxy agent for VGS Outbound Route
 function getProxyAgent() {
     const VGS_VAULT_ID = 'tntkmaqsnf9';
@@ -48,58 +42,80 @@ function getProxyAgent() {
     return agent;
 }
 
-// Route to process payment
-app.post('/process-payment', async (req, res) => {
-    console.log('Received tokenized payment data:', req.body);
+// Middleware to log incoming data from the front end and send it through VGS Outbound Route
+app.post('/process-payment', async (req, res, next) => {
+    console.log('Incoming data from front end:', req.body);
 
     try {
         // Get proxy agent for VGS Outbound Route
         const agent = getProxyAgent();
 
+        // Send tokenized payment data to VGS Outbound Route
+        const vgsResponse = await axios.post('https://tntkmaqsnf9.sandbox.verygoodproxy.com/post', req.body, {
+            httpsAgent: agent
+        });
+
+        // Log VGS response
+        console.log('VGS Response:', vgsResponse.data);
+
+        // Pass control to the next middleware
+        next();
+    } catch (error) {
+        console.error('Error processing payment:', error.message);
+        res.status(500).json({ error: 'An error occurred while processing payment.' });
+    }
+});
+
+// Route to process payment after tokenization
+app.post('/process-payment', async (req, res) => {
+    try {
         // Extract tokenized credit card data
         const { cc_number, cc_exp, cc_cvv } = req.body;
 
-        // Prepare data to be sent to Stripe
-        const paymentData = {
-            card: {
-                number: cc_number,
-                exp_month: parseInt(cc_exp.substring(0, 2)), // Extract month part and parse as integer
-                exp_year: parseInt('20' + cc_exp.substring(3)), // Extract year part and parse as integer
-                cvc: cc_cvv
-            }
-        };
+        // Check if the cc_exp is in the expected format
+        if (cc_exp && cc_exp.length === 7) {
+            let expiryMonth = parseInt(cc_exp.substring(11, 13)); // Extract month part and parse as integer
+            let expiryYear = parseInt('20' + cc_exp.substring(8, 10)); // Extract year part and parse as integer
 
-        // Send tokenized payment data to Stripe via VGS Outbound Route
-        const stripeResponse = await axios.post('https://api.stripe.com/v1/payment_methods', qs.stringify(paymentData), {
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'Authorization': 'Bearer sk_test_4eC39HqLyjWDarjtT1zdp7dc'
-            },
-            httpsAgent: agent
-        });
+            const paymentData = {
+                card: {
+                    number: cc_number,
+                    exp_month: expiryMonth,
+                    exp_year: expiryYear,
+                    cvc: cc_cvv
+                }
+            };
 
-        console.log('Stripe Response:', stripeResponse.data);
+            // Send tokenized payment data to Stripe
+            const stripeResponse = await axios.post('https://api.stripe.com/v1/payment_methods', qs.stringify(paymentData), {
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Authorization': 'Bearer sk_test_4eC39HqLyjWDarjtT1zdp7dc'
+                }
+            });
 
-        // Process payment intent
-        const paymentIntentResponse = await axios.post('https://api.stripe.com/v1/payment_intents', qs.stringify({
-            amount: 2000, // Example amount in cents ($20.00)
-            currency: 'usd',
-            payment_method: stripeResponse.data.id,
-            confirm: true
-        }), {
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'Authorization': 'Bearer sk_test_4eC39HqLyjWDarjtT1zdp7dc'
-            },
-            httpsAgent: agent
-        });
+            console.log('Stripe Response:', stripeResponse.data);
 
-        console.log('Payment Intent Response:', paymentIntentResponse.data);
+            // Process payment intent
+            const paymentIntentResponse = await axios.post('https://api.stripe.com/v1/payment_intents', qs.stringify({
+                amount: 2000, // Example amount in cents ($20.00)
+                currency: 'usd',
+                payment_method: stripeResponse.data.id,
+                confirm: true
+            }), {
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Authorization': 'Bearer sk_test_4eC39HqLyjWDarjtT1zdp7dc'
+                }
+            });
 
-        // Further processing steps...
+            console.log('Payment Intent Response:', paymentIntentResponse.data);
 
-        // Return success response to frontend
-        res.status(200).json({ message: 'Payment processed successfully' });
+            // Return success response to frontend
+            res.status(200).json({ message: 'Payment processed successfully' });
+        } else {
+            throw new Error('Invalid cc_exp format');
+        }
     } catch (error) {
         console.error('Error processing payment:', error.message);
         res.status(500).json({ error: 'An error occurred while processing payment.' });
