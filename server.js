@@ -8,7 +8,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public'))); // Serve static files from the 'public' directory
+app.use(express.static(path.join(__dirname, 'public')));
 
 console.log(`Outbound route certificate is stored at this path: ${process.env['NODE_EXTRA_CA_CERTS']}`);
 
@@ -22,9 +22,11 @@ function getProxyAgent() {
     const VGS_VAULT_ID = 'tntkmaqsnf9'; // Your VGS Vault ID
     const VGS_USERNAME = 'USpDfWz23n8FGztYxzi5RNDa'; // Your VGS Username
     const VGS_PASSWORD = '6563291f-aaec-49c4-b63f-45fbbc0e1fe3'; // Your VGS Password
-    const vgs_outbound_url = `${VGS_VAULT_ID}.sandbox.verygoodproxy.com`
+    const vgs_outbound_url = `${VGS_VAULT_ID}.sandbox.verygoodproxy.com`;
     console.log(`Sending request through outbound Route: ${vgs_outbound_url}`);
-    return tunnel.httpsOverHttps({
+
+    // Create a tunneling agent for HTTPS requests
+    const agent = tunnel.httpsOverHttps({
         proxy: {
             servername: vgs_outbound_url,
             host: vgs_outbound_url,
@@ -32,6 +34,17 @@ function getProxyAgent() {
             proxyAuth: `${VGS_USERNAME}:${VGS_PASSWORD}`
         },
     });
+
+    // Check for connectivity before sending the request
+    agent.on('connect', () => {
+        console.log('Connection established successfully.');
+    });
+
+    agent.on('error', (error) => {
+        console.error('Error establishing connection:', error.message);
+    });
+
+    return agent;
 }
 
 app.post('/process-payment', async (req, res) => {
@@ -76,4 +89,3 @@ app.get('/', (req, res) => {
 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
-});
