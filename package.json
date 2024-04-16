@@ -4,7 +4,7 @@
   "description": "Backend server for handling payment tokenization and processing using VGS and Stripe.",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "NODE_EXTRA_CA_CERTS=/Users/raghavdave/Documents/VGSAssigment/sandbox.pem node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [

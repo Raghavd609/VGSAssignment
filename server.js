@@ -7,15 +7,12 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Hardcoded path for the outbound certificate
-const VGS_OUTBOUND_CERT_PATH = '/Users/raghavdave/Documents/VGSAssigment/sandbox.pem';
-
 const VGS_VAULT_ID = 'tntkmaqsnf9';
 const VGS_USERNAME = 'USpDfWz23n8FGztYxzi5RNDa';
 const VGS_PASSWORD = '6563291f-aaec-49c4-b63f-45fbbc0e1fe3';
 const STRIPE_KEY = 'sk_test_51Lrs6CK6opjUgeSmFHReX14eBMcbofCJrUOisGTC7ASpkfFMqD6Eysbs83qBC12YZErV3nv1Pg4UTy9WRhPRVUpQ00o7cUrV8I';
 
-console.log(`Outbound route certificate is stored at this path: ${VGS_OUTBOUND_CERT_PATH}`);
+console.log(`Outbound route certificate is stored at this path: ${process.env['NODE_EXTRA_CA_CERTS']}`);
 
 function getProxyAgent() {
     const vgs_outbound_url = `${VGS_VAULT_ID}.sandbox.verygoodproxy.com`;
@@ -27,17 +24,10 @@ function getProxyAgent() {
             port: 8443,
             proxyAuth: `${VGS_USERNAME}:${VGS_PASSWORD}`
         },
-        ca: VGS_OUTBOUND_CERT_PATH // Use the hardcoded certificate path
     });
 }
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
-
-// Route handler for serving the payment form
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
 
 // Route handler for processing payment
 app.post('/process-payment', async (req, res) => {
@@ -47,8 +37,17 @@ app.post('/process-payment', async (req, res) => {
     try {
         let agent = getProxyAgent();
 
+        const instance = axios.create({
+            baseURL: 'https://api.stripe.com',
+            headers: {
+                'Authorization': `Bearer ${STRIPE_KEY}`,
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            httpsAgent: agent,
+        });
+
         // Send card info to payment_methods endpoint
-        const pm_response = await axios.post('https://api.stripe.com/v1/payment_methods', qs.stringify({
+        const pm_response = await instance.post('/v1/payment_methods', qs.stringify({
             type: 'card',
             card: {
                 number: creditCardInfo['cc_number'],
@@ -56,28 +55,16 @@ app.post('/process-payment', async (req, res) => {
                 exp_month: creditCardInfo['cc_exp_month'], // Assuming separate fields for month and year
                 exp_year: creditCardInfo['cc_exp_year']
             }
-        }), {
-            headers: {
-                'Authorization': `Bearer ${STRIPE_KEY}`,
-                'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            httpsAgent: agent,
-        });
+        }));
         console.log('Payment method created:', pm_response.data);
 
         // Use the payment method to post a payment using the payment_intents endpoint
-        const pi_response = await axios.post('https://api.stripe.com/v1/payment_intents', qs.stringify({
+        const pi_response = await instance.post('/v1/payment_intents', qs.stringify({
             amount: 100, // Sample amount
             currency: 'usd',
             payment_method: pm_response.data.id,
             confirm: true
-        }), {
-            headers: {
-                'Authorization': `Bearer ${STRIPE_KEY}`,
-                'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            httpsAgent: agent,
-        });
+        }));
         console.log('Payment intent processed:', pi_response.data);
 
         res.status(200).send('Payment processed successfully');
