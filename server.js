@@ -1,21 +1,14 @@
-const express = require('express');
 const axios = require('axios');
 const tunnel = require('tunnel');
 const qs = require('qs');
-const path = require('path');
 
-// Set the environment variable directly in your backend code
-process.env.NODE_EXTRA_CA_CERTS = path.join(__dirname, 'outbound-route-sandbox.pem');
-
-const app = express();
-const PORT = process.env.PORT || 3000;
-
+const STRIPE_KEY = 'sk_test_51Lrs6CK6opjUgeSmFHReX14eBMcbofCJrUOisGTC7ASpkfFMqD6Eysbs83qBC12YZErV3nv1Pg4UTy9WRhPRVUpQ00o7cUrV8I';
 const VGS_VAULT_ID = 'tntkmaqsnf9';
 const VGS_USERNAME = 'USpDfWz23n8FGztYxzi5RNDa';
 const VGS_PASSWORD = '6563291f-aaec-49c4-b63f-45fbbc0e1fe3';
-const STRIPE_KEY = 'sk_test_51Lrs6CK6opjUgeSmFHReX14eBMcbofCJrUOisGTC7ASpkfFMqD6Eysbs83qBC12YZErV3nv1Pg4UTy9WRhPRVUpQ00o7cUrV8E';
 
-console.log(`Outbound route certificate is stored at this path: ${process.env.NODE_EXTRA_CA_CERTS}`);
+console.log(`Outbound route certificate is stored at this path: ${process.env['NODE_EXTRA_CA_CERTS']}`);
+
 
 function getProxyAgent() {
     const vgs_outbound_url = `${VGS_VAULT_ID}.sandbox.verygoodproxy.com`;
@@ -30,69 +23,51 @@ function getProxyAgent() {
     });
 }
 
-app.use(express.json());
+async function postStripePayment(creditCardInfo) {
+    console.log('Payment data:', creditCardInfo);
 
-// Serve static files from the public folder
-app.use(express.static(path.join(__dirname, 'public')));
+    let agent = getProxyAgent();
+    let expiry = creditCardInfo['card-expiration-date'].split('/');
 
-// Route handler for processing payment
-app.post('/process-payment', async (req, res) => {
-    const creditCardInfo = req.body;
-    console.log('Received credit card info:', creditCardInfo);
+    const instance = axios.create({
+        baseURL: 'https://api.stripe.com',
+        headers: {
+            'Authorization': `Bearer ${STRIPE_KEY}`,
+        },
+        httpsAgent: agent,
+    });
 
     try {
-        let agent = getProxyAgent();
-
-        const instance = axios.create({
-            baseURL: 'https://api.stripe.com',
-            headers: {
-                'Authorization': `Bearer ${STRIPE_KEY}`,
-                'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            httpsAgent: agent,
-        });
-
-        // Send card info to payment_methods endpoint
-        const pm_request_data = qs.stringify({
+        let pm_data = {
             type: 'card',
             card: {
-                number: creditCardInfo['cc_number'],
-                cvc: creditCardInfo['cc_cvv'],
-                exp_month: creditCardInfo['cc_exp_month'], // Assuming separate fields for month and year
-                exp_year: creditCardInfo['cc_exp_year']
+                number: creditCardInfo['card-number'],
+                cvc: creditCardInfo['card-security-code'],
+                exp_month: expiry[0].trim(),
+                exp_year: expiry[1].trim()
             }
-        });
+        };
+        console.log('Creating payment method with data:', pm_data);
 
-        console.log('Sending request to Stripe Payment Methods API:', pm_request_data);
-
-        const pm_response = await instance.post('/v1/payment_methods', pm_request_data);
+        let pm_response = await instance.post('/v1/payment_methods', qs.stringify(pm_data));
         console.log('Payment method created:', pm_response.data);
 
-        // Use the payment method to post a payment using the payment_intents endpoint
-        const pi_request_data = qs.stringify({
-            amount: 100, // Sample amount
+        let pi_data = {
+            amount: 100,
             currency: 'usd',
             payment_method: pm_response.data.id,
             confirm: true
-        });
+        };
+        console.log('Creating payment intent with data:', pi_data);
 
-        console.log('Sending request to Stripe Payment Intents API:', pi_request_data);
-
-        const pi_response = await instance.post('/v1/payment_intents', pi_request_data);
-        console.log('Payment intent processed:', pi_response.data);
-
-        res.status(200).send('Payment processed successfully');
+        let pi_response = await instance.post('/v1/payment_intents', qs.stringify(pi_data));
+        console.log('Payment intent created:', pi_response.data);
+        
+        return pi_response.data;
     } catch (error) {
-        console.error('Error during payment processing:', error);
-        if (error.response) {
-            console.error('Response data:', error.response.data);
-            console.error('Response status:', error.response.status);
-            console.error('Response headers:', error.response.headers);
-        }
-        res.status(500).send('An error occurred during payment processing');
+        console.error('Error occurred:', error.response ? error.response.data : error.message);
+        throw error;
     }
-});
+}
 
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+module.exports = postStripePayment;
