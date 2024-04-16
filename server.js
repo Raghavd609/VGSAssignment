@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const axios = require('axios');
 const tunnel = require('tunnel');
 const qs = require('qs');
@@ -6,10 +7,16 @@ const qs = require('qs');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Define paths for Express config
+const publicDirectoryPath = path.join(__dirname, '../public');
+
 const VGS_VAULT_ID = 'tntkmaqsnf9';
 const VGS_USERNAME = 'USpDfWz23n8FGztYxzi5RNDa';
 const VGS_PASSWORD = '6563291f-aaec-49c4-b63f-45fbbc0e1fe3';
 const STRIPE_KEY = 'sk_test_51Lrs6CK6opjUgeSmFHReX14eBMcbofCJrUOisGTC7ASpkfFMqD6Eysbs83qBC12YZErV3nv1Pg4UTy9WRhPRVUpQ00o7cUrV8I';
+
+// Setup static directory to serve
+app.use(express.static(publicDirectoryPath));
 
 console.log(`Outbound route certificate is stored at this path: ${process.env['NODE_EXTRA_CA_CERTS']}`);
 
@@ -74,7 +81,7 @@ app.post('/process-payment', async (req, res) => {
 
 // Route handler for the root URL
 app.get('/', (req, res) => {
-    res.send('Welcome to the payment processing server'); // or any other message you want to display
+    res.sendFile(path.join(publicDirectoryPath, 'index.html'));
 });
 
 app.listen(PORT, () => {
