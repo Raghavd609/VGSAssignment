@@ -25,7 +25,7 @@ function getProxyAgent() {
 }
 
 // Route to send data to outbound route
-app.post('/send-to-outbound', async (req, res) => {
+app.post('/process-payment', async (req, res) => {
     try {
         console.log('Incoming request data:', req.body);
 
@@ -44,9 +44,4 @@ app.post('/send-to-outbound', async (req, res) => {
         console.error('Error sending data to outbound route:', error.message);
         res.status(500).json({ error: 'An error occurred while sending data to outbound route.' });
     }
-});
-
-// Start the server
-app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
 });
