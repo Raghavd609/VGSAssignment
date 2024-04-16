@@ -14,6 +14,7 @@ const STRIPE_KEY = 'sk_test_51Lrs6CK6opjUgeSmFHReX14eBMcbofCJrUOisGTC7ASpkfFMqD6
 
 console.log(`Outbound route certificate is stored at this path: ${process.env['NODE_EXTRA_CA_CERTS']}`);
 
+
 function getProxyAgent() {
     const vgs_outbound_url = `${VGS_VAULT_ID}.sandbox.verygoodproxy.com`;
     console.log(`Sending request through outbound Route: ${vgs_outbound_url}`);
