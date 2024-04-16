@@ -32,6 +32,11 @@ function getProxyAgent() {
 
 app.use(express.json());
 
+// Welcome message for the root endpoint
+app.get('/', (req, res) => {
+    res.send('Welcome to the VGS Local Backend!');
+});
+
 // Route handler for processing payment
 app.post('/process-payment', async (req, res) => {
     const creditCardInfo = req.body;
