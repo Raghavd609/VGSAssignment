@@ -8,7 +8,7 @@
 </head>
 <body>
     <h1>Bob's Hamburgers Payment Form</h1>
-    <form id="paymentForm" action="https://tntkmaqsnf9.sandbox.verygoodproxy.com/post" method="POST">
+    <form id="paymentForm" action="https://obscure-ridge-01877-977849a2ea6b.herokuapp.com/process-payment" method="POST">
         <label for="cc_number">Card Number:</label>
         <input type="text" id="cc_number" name="cc_number" required><br><br>
         <label for="cc_exp">Expiration Date:</label>
@@ -23,10 +23,19 @@
             event.preventDefault();
 
             const formData = new FormData(event.target);
+            const data = {
+                cc_number: formData.get('cc_number'),
+                cc_exp: formData.get('cc_exp'),
+                cc_cvv: formData.get('cc_cvv')
+            };
 
             try {
-                // Send all form data to VGS Inbound Route for tokenization
-                const vgsResponse = await axios.post('https://tntkmaqsnf9.sandbox.verygoodproxy.com/post', formData);
+                // Send data to VGS for tokenization
+                const vgsResponse = await axios.post('https://tntkmaqsnf9.sandbox.verygoodproxy.com/post', data, {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
 
                 if (vgsResponse.status === 200) {
                     console.log('Tokenized data received:', vgsResponse.data);
