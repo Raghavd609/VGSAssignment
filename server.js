@@ -30,6 +30,10 @@ function getProxyAgent() {
 app.post('/process-payment', async (req, res) => {
     console.log('RECEIVED BODY:', req.body); // Log the entire body to see what is actually being sent
     const creditCardInfo = req.body;
+    console.log(' PROCESS PAYMENT CHECKING EXPIRATION DATE:', creditCardInfo.cc_exp);
+    console.log(' PROCESS PAYMENT CHECKING EXPIRATION creaditCardInfo.data:', creditCardInfo['data']);
+    console.log(' PROCESS PAYMENT CHECKING EXPIRATION creaditCardInfo.data.cc_number: TEST ', creditCardInfo['data']['cc_number']);
+    console.log(' PROCESS PAYMENT CHECKING EXPIRATION creaditCardInfo.data.cc_exp:', creditCardInfo['data'].cc_exp);
 
     if (!creditCardInfo || !creditCardInfo.cc_exp) {
         console.error('Invalid or missing credit card information');
@@ -48,7 +52,7 @@ app.post('/process-payment', async (req, res) => {
 async function postStripePayment(creditCardInfo) {
     console.log('CHECKING EXPIRATION DATE:', creditCardInfo.cc_exp);
     console.log('CHECKING EXPIRATION creaditCardInfo.data:', creditCardInfo['data']);
-        console.log('CHECKING EXPIRATION creaditCardInfo.data.cc_number: TEST ', creditCardInfo['data']['cc_number']);
+    console.log('CHECKING EXPIRATION creaditCardInfo.data.cc_number: TEST ', creditCardInfo['data']['cc_number']);
     console.log('CHECKING EXPIRATION creaditCardInfo.data.cc_exp:', creditCardInfo['data'].cc_exp);
     const agent = getProxyAgent();
     const expiry = creditCardInfo.cc_exp.split('/').map(item => item.trim());
