@@ -34,8 +34,13 @@ function getProxyAgent() {
 app.post('/process-payment', async (req, res) => {
     console.log('Received request:', req.body);
 
-    const creditCardData = req.body;
-    console.log('creditCardData OBJECT TEST', creditCardData);
+    const jsonResp = req.body.json;
+    const creditCardData = jsonResp['data']
+     console.log('creditCardData OBJECT TEST ', creditCardData);
+    console.log('creditCardData OBJECT TEST CC_EXP', creditCardData['cc_exp']);
+    console.log('creditCardData OBJECT TEST CC_EXP', creditCardData['cc_number']);
+    console.log('creditCardData OBJECT TEST CC_EXP', creditCardData['cc_cvv']);
+
 
 
     if (!creditCardData || !creditCardData.cc_exp || !creditCardData.cc_number || !creditCardData.cc_cvv) {
