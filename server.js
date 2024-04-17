@@ -15,11 +15,9 @@ const STRIPE_KEY = 'sk_test_51Lrs6CK6opjUgeSmFHReX14eBMcbofCJrUOisGTC7ASpkfFMqD6
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-console.log(`Outbound route certificate is stored at this path: ${process.env['NODE_EXTRA_CA_CERTS']}`);
-
 // Proxy configuration for outbound VGS
 function getProxyAgent() {
-    const vgs_outbound_url = `${VGS_VAULT_ID}.sandbox.verygoodproxy.com`
+    const vgs_outbound_url = `${VGS_VAULT_ID}.sandbox.verygoodproxy.com`;
     console.log(`Sending request through outbound Route: ${vgs_outbound_url}`);
     return tunnel.httpsOverHttps({
         proxy: {
@@ -32,71 +30,27 @@ function getProxyAgent() {
 }
 
 app.post('/process-payment', async (req, res) => {
-    console.log('Received request:', req.body);
-
-    const creditCardData = typeof req.body.data === 'string' ? JSON.parse(req.body.data) : req.body.data;
-   
-    console.log('creditCardData OBJECT TEST CC_EXP', creditCardData['cc_exp']);
-    console.log('creditCardData OBJECT TEST CC_EXP', creditCardData['cc_number']);
-    console.log('creditCardData OBJECT TEST CC_EXP', creditCardData['cc_cvv']);
-
-
+    const creditCardData = req.body.data ? JSON.parse(req.body.data) : req.body;
 
     if (!creditCardData || !creditCardData.cc_exp || !creditCardData.cc_number || !creditCardData.cc_cvv) {
         console.error('Invalid or missing credit card information');
         return res.status(400).json({ error: 'Invalid or missing credit card information' });
     }
-    
-    console.log('creditCardData.cc_exp[0', creditCardData.cc_exp[0]);
-     console.log('creditCardData.cc_exp[1]', creditCardData.cc_exp[1]);
-
-
-
-    const expiry = creditCardData.cc_exp.split('/');
-    
-    console.log('expiry testing ', expiry);
-    
-    const exp_month = expiry[0].trim();
-    const exp_year = expiry[1].trim();
-
-    if (isNaN(exp_month) || exp_month < 1 || exp_month > 12 || isNaN(exp_year) || exp_year.length !== 2) {
-        return res.status(400).json({ error: "Expiration date is out of range or incorrectly formatted" });
-    }
 
     try {
-        const tokenizedData = await tokenizeCreditCardData(creditCardData);
-        console.log('Tokenized Data:', tokenizedData);
-        const paymentResponse = await postStripePayment(tokenizedData);
-        res.status(200).json(paymentResponse);
+        const paymentMethodResponse = await postStripePayment(creditCardData);
+        res.status(200).json(paymentMethodResponse);
     } catch (error) {
         console.error('Error processing payment:', error);
         res.status(500).json({ error: error.message });
     }
 });
 
-async function tokenizeCreditCardData(creditCardData) {
+async function postStripePayment(creditCardData) {
     const agent = getProxyAgent();
-
-    const instance = axios.create({
-        baseURL: `https://${VGS_VAULT_ID}.sandbox.verygoodproxy.com`,
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        httpsAgent: agent,
-    });
-
-    const vgsResponse = await instance.post('/post', {
-        cc_number: creditCardData.cc_number,
-        cc_cvv: creditCardData.cc_cvv,
-        cc_exp: creditCardData.cc_exp
-    });
-
-    console.log('Received tokenized data from VGS:', vgsResponse.data);
-    return vgsResponse.data;
-}
-
-async function postStripePayment(tokenizedData) {
-    const agent = getProxyAgent();
+    const expiry = creditCardData.cc_exp.split('/');
+    const exp_month = expiry[0].trim();
+    const exp_year = expiry[1].trim();
 
     const instance = axios.create({
         baseURL: 'https://api.stripe.com',
@@ -106,27 +60,37 @@ async function postStripePayment(tokenizedData) {
         },
         httpsAgent: agent,
     });
-    
-    const cardInfo = JSON.parse(tokenizedData.data);
-    
-    console.log(' cardInfo.cc_exp', cardInfo.cc_exp);
-    console.log(' cardInfo.cc_number', cardInfo.cc_number);
-    console.log(' cardInfo.cc_cvv', cardInfo.cc_cvv);
 
-    console.log('Sending tokenized data to Stripe:', cardInfo);
-
-    const pm_response = await instance.post('/v1/payment_methods', qs.stringify({
+    const paymentMethodResponse = await instance.post('/v1/payment_methods', qs.stringify({
         type: 'card',
         card: {
-            number: cardInfo.cc_number,
-            cvc: cardInfo.cc_cvv,
-            exp_month: cardInfo.cc_exp.split('/')[0].trim(),
-            exp_year: cardInfo.cc_exp.split('/')[1].trim()
+            number: creditCardData.cc_number,
+            cvc: creditCardData.cc_cvv,
+            exp_month: exp_month,
+            exp_year: '20' + exp_year  // Assuming the year is provided in two digits
         }
     }));
 
-    console.log('Payment Method Response:', pm_response.data);
-    return pm_response.data;
+    if (paymentMethodResponse.data.error) {
+        throw new Error(paymentMethodResponse.data.error.message);
+    }
+
+    // Create and conymentfirm the paymenyt intent
+    console.error('Payment method id', paymentMethodResponse.data.id);
+
+    const paymentIntentResponse = await instance.post('/v1/payment_intents', qs.stringify({
+        amount: 2000,  // Amount in cents, e.g., $100.00
+        currency: 'usd',
+        payment_method: paymentMethodResponse.data.id,
+        confirm: true,
+        use_stripe_sdk: true
+    }));
+
+    if (paymentIntentResponse.data.error) {
+        throw new Error(paymentIntentResponse.data.error.message);
+    }
+
+    return paymentIntentResponse.data;
 }
 
 app.get('/', (req, res) => {
