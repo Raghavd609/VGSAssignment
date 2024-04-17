@@ -71,7 +71,7 @@ async function postStripePayment(creditCardData) {
             number: creditCardData.cc_number,
             cvc: creditCardData.cc_cvv,
             exp_month: exp_month,
-            exp_year: '20' + exp_year  // Assuming the year is provided in two digits
+            exp_year: exp_year  // Assuming the year is provided in two digits
         }
     }));
 
