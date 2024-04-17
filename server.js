@@ -5,7 +5,7 @@ const qs = require('qs');
 const path = require('path');
 const fs = require('fs');
 
-
+const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -14,7 +14,6 @@ const VGS_USERNAME = config.VGS_USERNAME;
 const VGS_PASSWORD = config.VGS_PASSWORD;
 const STRIPE_KEY = config.STRIPE_KEY;
 
-const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
