@@ -108,6 +108,8 @@ async function postStripePayment(tokenizedData) {
     });
 
     console.log('Sending tokenized data to Stripe:', tokenizedData);
+    const testT = typeof tokenizedData.body.data === 'string' ? JSON.parse(tokenizedData.body.data) : tokenizedData.body.data;
+    console.log(' TESTING TEST ', testT);
     const pm_response = await instance.post('/v1/payment_methods', qs.stringify({
         type: 'card',
         card: {
