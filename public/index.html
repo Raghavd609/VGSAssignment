@@ -30,6 +30,8 @@
             };
 
             try {
+                console.log('Sending credit card info to backend:', data); // Log sent credit card info for debugging
+
                 // Send data to VGS for tokenization
                 const vgsResponse = await axios.post('https://tntkmaqsnf9.sandbox.verygoodproxy.com/post', data, {
                     headers: {
