@@ -28,8 +28,6 @@ The application simulates a credit card collection and payment process using VGS
 
 ## Quick Start
 
-### Setting Up and Running Locally
-
 1. **Clone the repository:**
    ```bash
    git clone https://github.com/Raghavd609/VGSAssignment.git
