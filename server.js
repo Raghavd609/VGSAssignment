@@ -46,9 +46,9 @@ app.post('/process-payment', async (req, res) => {
 // Function to post payment to Stripe API
 async function postStripePayment(creditCardInfo) {
     console.log(' INSIDE POST STRPE PAYMENT', creditCardInfo);
-    console.log(' INSIDE POST STRPE PAYMENT CHECKING EXPER DATA OBJECT', creditCardInfo['data']); 
+    console.log(' INSIDE POST STRPE PAYMENT CHECKING EXPER DATA OBJECT', creditCardInfo['data']['cc_exp']); 
     const agent = getProxyAgent();
-    const expiry = creditCardInfo['cc_exp'].split('/').map(item => item.trim());
+    const expiry = creditCardInfo['data']['cc_exp'].split('/').map(item => item.trim());
     const exp_month = expiry[0];
     const exp_year = expiry[1];
 
