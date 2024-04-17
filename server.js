@@ -57,7 +57,6 @@ async function postStripePayment(creditCardData) {
         baseURL: 'https://api.stripe.com',
         headers: {
             'Authorization': `Basic ${Buffer.from(STRIPE_KEY + ':').toString('base64')}`,
-            'Content-Type': 'application/x-www-form-urlencoded'
         },
         httpsAgent: agent,
     });
@@ -74,9 +73,8 @@ async function postStripePayment(creditCardData) {
             exp_year: exp_year  // Assuming the year is provided in two digits
         }
     }));
-
+    console.info('Payment method ERROR', paymentMethodResponse);
     if (paymentMethodResponse.data.error) {
-        console.info('Payment method ERROR', paymentMethodResponse);
         throw new Error(paymentMethodResponse.data.error.message);
     }
 
