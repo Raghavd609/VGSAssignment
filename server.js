@@ -18,6 +18,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Proxy configuration
 function getProxyAgent() {
     const vgs_outbound_url = `${VGS_VAULT_ID}.sandbox.verygoodproxy.com`;
+    console.log('STEP 1: OUTBOUND - GOING TO THE OUBOUND CALL PATH:', vgs_outbound_url);
     return tunnel.httpsOverHttps({
         proxy: {
             servername: vgs_outbound_url,
