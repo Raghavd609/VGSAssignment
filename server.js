@@ -62,8 +62,6 @@ async function postStripePayment(creditCardData) {
         },
         httpsAgent: agent,
     });
-    console.info('EXP Month ', exp_month);
-    console.info('EXP Year ',  exp_year);
 
     console.info('Sending payment data through VGS:', creditCardData.cc_number);
     console.info('Sending payment data through VGS:',creditCardData.cc_cvv);
