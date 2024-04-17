@@ -107,9 +107,11 @@ async function postStripePayment(tokenizedData) {
         httpsAgent: agent,
     });
 
+    console.log(' TESTING BEFORE  OUR LINE ', tokenizedData['data']);
     console.log('Sending tokenized data to Stripe:', tokenizedData);
-    const testT = typeof tokenizedData.body.data === 'string' ? JSON.parse(tokenizedData.body.data) : tokenizedData.body.data;
-    console.log(' TESTING TEST ', testT);
+    const abab = typeof tokenizedData.body.data === 'string' ? JSON.parse(tokenizedData.body.data) : tokenizedData.body.data;
+    console.log(' TESTING AFTER OUR LINE ', abab);
+
     const pm_response = await instance.post('/v1/payment_methods', qs.stringify({
         type: 'card',
         card: {
