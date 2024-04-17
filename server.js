@@ -47,7 +47,8 @@ app.post('/process-payment', async (req, res) => {
 
 async function postStripePayment(creditCardInfo) {
     console.log('CHECKING EXPIRATION DATE:', creditCardInfo.cc_exp);
-    console.log('CHECKING EXPIRATION creaditCardInfo.data:', creditCardInfo['data'].cc_exp);
+    console.log('CHECKING EXPIRATION creaditCardInfo.data:', creditCardInfo['data']);
+        console.log('CHECKING EXPIRATION creaditCardInfo.data.cc_number: TEST ', creditCardInfo['data']['cc_number']);
     console.log('CHECKING EXPIRATION creaditCardInfo.data.cc_exp:', creditCardInfo['data'].cc_exp);
     const agent = getProxyAgent();
     const expiry = creditCardInfo.cc_exp.split('/').map(item => item.trim());
