@@ -32,17 +32,12 @@ The application simulates a credit card collection and payment process using VGS
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/yourusername/VGSAssignment.git
-   cd VGSAssignment
+   git clone https://github.com/Raghavd609/VGSAssignment.git
 2. Install dependencies:
-   cd VGSLocalBackEnd
-   npm install
+    cd VGSLocalBackEnd
+    npm install
 
-3.Configure Environment Variables:
-   STRIPE_SECRET_KEY=your_stripe_secret_key
-   VGS_ACCESS_CREDENTIALS=your_vgs_access_credentials
+3.Configure Environment Variables: 
+Located in the config.json
    
-4.Start the Server:
-   Run the following command to start your server and begin serving the application locally:
-   npm start
 
