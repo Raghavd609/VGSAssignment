@@ -1,0 +1,6 @@
+{
+    "VGS_VAULT_ID": "your_vgs_vault_id",
+    "VGS_USERNAME": "your_vgs_username",
+    "VGS_PASSWORD": "your_vgs_password",
+    "STRIPE_KEY": "your_stripe_key"
+}

@@ -3,15 +3,18 @@ const axios = require('axios');
 const tunnel = require('tunnel');
 const qs = require('qs');
 const path = require('path');
+const fs = require('fs');
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const VGS_VAULT_ID = 'tntkmaqsnf9';
-const VGS_USERNAME = 'USpDfWz23n8FGztYxzi5RNDa';
-const VGS_PASSWORD = '6563291f-aaec-49c4-b63f-45fbbc0e1fe3';
-const STRIPE_KEY = 'sk_test_51Lrs6CK6opjUgeSmFHReX14eBMcbofCJrUOisGTC7ASpkfFMqD6Eysbs83qBC12YZErV3nv1Pg4UTy9WRhPRVUpQ00o7cUrV8I';
+const VGS_VAULT_ID = config.VGS_VAULT_ID;
+const VGS_USERNAME = config.VGS_USERNAME;
+const VGS_PASSWORD = config.VGS_PASSWORD;
+const STRIPE_KEY = config.STRIPE_KEY;
 
+const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
