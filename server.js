@@ -107,7 +107,7 @@ async function postStripePayment(tokenizedData) {
         httpsAgent: agent,
     });
     
-    const abab = JSON.parse(tokenizedData.body.data);
+    const abab = JSON.parse(tokenizedData.data);
     
     console.log(' TESTING BEFORE  OUR LINE abab', abab);
     console.log(' TESTING AFTER OUR LINE abab', abab.cc_exp);
