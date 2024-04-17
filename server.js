@@ -33,11 +33,11 @@ app.post('/process-payment', async (req, res, next) => {
     const creditCardInfo = req.body;
 
     try {
-        console.log('Received credit card info:', creditCardInfo); // Log received credit card info for debugging
+        console.log('RECEIVED CREDIT CARD INFO:', creditCardInfo); // Log received credit card info for debugging
         const paymentResponse = await postStripePayment(creditCardInfo);
         res.status(200).json(paymentResponse);
     } catch (error) {
-        console.error('Error processing payment:', error);
+        console.error('ERROR PROCESSING PAYMENT:', error);
         next(error); // Pass error to the error handling middleware
     }
 });
@@ -57,6 +57,7 @@ async function postStripePayment(creditCardInfo) {
         httpsAgent: agent,
     });
 
+    console.log('SENDING PAYMENT METHOD DATA TO STRIPE:', creditCardInfo);
     const pm_response = await instance.post('/v1/payment_methods', qs.stringify({
         type: 'card',
         card: {
@@ -66,15 +67,16 @@ async function postStripePayment(creditCardInfo) {
             exp_year: expiry[1].trim()
         }
     }));
-    console.log('Payment method response:', pm_response.data);
+    console.log('PAYMENT METHOD RESPONSE:', pm_response.data);
 
+    console.log('SENDING PAYMENT INTENT DATA TO STRIPE:', pm_response.data);
     const pi_response = await instance.post('/v1/payment_intents', qs.stringify({
         amount: 100,
         currency: 'usd',
         payment_method: pm_response.data.id,
         confirm: true
     }));
-    console.log('Payment intent response:', pi_response.data);
+    console.log('PAYMENT INTENT RESPONSE:', pi_response.data);
 
     return pi_response.data;
 }

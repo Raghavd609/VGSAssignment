@@ -8,7 +8,7 @@
 </head>
 <body>
     <h1>Bob's Hamburgers Payment Form</h1>
-    <form id="paymentForm" action="https://obscure-ridge-01877-977849a2ea6b.herokuapp.com/process-payment" method="POST">
+    <form id="paymentForm">
         <label for="cc_number">Card Number:</label>
         <input type="text" id="cc_number" name="cc_number" required><br><br>
         <label for="cc_exp">Expiration Date:</label>
@@ -30,7 +30,7 @@
             };
 
             try {
-                console.log('Sending credit card info to backend:', data); // Log sent credit card info for debugging
+                console.log('Sending credit card info to VGS for tokenization:', data); // Log sent credit card info for debugging
 
                 // Send data to VGS for tokenization
                 const vgsResponse = await axios.post('https://tntkmaqsnf9.sandbox.verygoodproxy.com/post', data, {
