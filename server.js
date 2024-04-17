@@ -18,7 +18,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Proxy configuration
 function getProxyAgent() {
     const vgs_outbound_url = `${VGS_VAULT_ID}.sandbox.verygoodproxy.com`;
-    console.log('STEP 1: OUTBOUND - GOING TO THE OUBOUND CALL PATH:', vgs_outbound_url);
+    console.log('STEP 1: OUTBOUND - GOING TO THE OUTBOUND CALL PATH:', vgs_outbound_url);
     return tunnel.httpsOverHttps({
         proxy: {
             servername: vgs_outbound_url,
@@ -30,7 +30,7 @@ function getProxyAgent() {
 }
 
 // Handle payment processing
-app.post('/process-payment', async (req, res, next) => {
+app.post('/process-payment', async (req, res) => {
     const creditCardInfo = req.body;
     console.log('RECEIVED CREDIT CARD INFO:', creditCardInfo); // Log received credit card info for debugging
 
@@ -45,13 +45,16 @@ app.post('/process-payment', async (req, res, next) => {
 
 // Function to post payment to Stripe API
 async function postStripePayment(creditCardInfo) {
+    console.log(' INSIDE POST STRPE PAYMENT', creditCardInfo);
+    console.log(' INSIDE POST STRPE PAYMENT CHECKING EXPER DATA OBJECT', creditCardInfo['data']); 
     const agent = getProxyAgent();
-    const expiry = creditCardInfo['cc_exp'] ? creditCardInfo['cc_exp'].split('/') : ['', ''];
-    const exp_month = expiry[0].trim();
-    const exp_year = expiry[1].trim();
+    const expiry = creditCardInfo['cc_exp'].split('/').map(item => item.trim());
+    const exp_month = expiry[0];
+    const exp_year = expiry[1];
 
-    if (!exp_month || !exp_year) {
-        throw new Error("Invalid expiration date");
+    // Validate the expiration month and year
+    if (isNaN(exp_month) || exp_month < 1 || exp_month > 12 || isNaN(exp_year) || exp_year.length !== 2) {
+        throw new Error("Expiration date is out of range or incorrectly formatted");
     }
 
     const buff = Buffer.from(STRIPE_KEY + ":");
@@ -72,23 +75,13 @@ async function postStripePayment(creditCardInfo) {
             number: creditCardInfo['cc_number'],
             cvc: creditCardInfo['cc_cvv'],
             exp_month: exp_month,
-            exp_year: exp_year
+            exp_year: '20' + exp_year  // Assuming the year is provided in two digits
         }
     }));
 
     console.log('PAYMENT METHOD RESPONSE:', pm_response.data);
 
-    console.log('SENDING PAYMENT INTENT DATA TO STRIPE:', pm_response.data);
-    const pi_response = await instance.post('/v1/payment_intents', qs.stringify({
-        amount: 100,
-        currency: 'usd',
-        payment_method: pm_response.data.id,
-        confirm: true
-    }));
-
-    console.log('PAYMENT INTENT RESPONSE:', pi_response.data);
-
-    return pi_response.data;
+    return pm_response.data;
 }
 
 // Serve index.html for root URL
