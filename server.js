@@ -46,8 +46,16 @@ app.post('/process-payment', async (req, res) => {
         console.error('Invalid or missing credit card information');
         return res.status(400).json({ error: 'Invalid or missing credit card information' });
     }
+    
+    console.log('creditCardData.cc_exp[0', creditCardData.cc_exp[0]);
+     console.log('creditCardData.cc_exp[1]', creditCardData.cc_exp[1]);
+
+
 
     const expiry = creditCardData.cc_exp.split('/');
+    
+    console.log('expiry testing ', expiry);
+    
     const exp_month = expiry[0].trim();
     const exp_year = expiry[1].trim();
 
