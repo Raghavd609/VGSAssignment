@@ -17,7 +17,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 function getProxyAgent() {
     const vgs_outbound_url = `${VGS_VAULT_ID}.sandbox.verygoodproxy.com`;
-    console.log('STEP 1: OUTBOUND - GOING TO THE OUTBOUND CALL PATH:', vgs_outbound_url);
     return tunnel.httpsOverHttps({
         proxy: {
             servername: vgs_outbound_url,
@@ -29,8 +28,13 @@ function getProxyAgent() {
 }
 
 app.post('/process-payment', async (req, res) => {
+    console.log('RECEIVED BODY:', req.body); // Log the entire body to see what is actually being sent
     const creditCardInfo = req.body;
-    console.log('RECEIVED CREDIT CARD INFO:', creditCardInfo);
+
+    if (!creditCardInfo || !creditCardInfo.cc_exp) {
+        console.error('Invalid or missing credit card information');
+        return res.status(400).json({ error: 'Invalid or missing credit card information' });
+    }
 
     try {
         const paymentResponse = await postStripePayment(creditCardInfo);
@@ -42,9 +46,11 @@ app.post('/process-payment', async (req, res) => {
 });
 
 async function postStripePayment(creditCardInfo) {
-    console.log('CHECKING EXPIRATION DATE:', creditCardInfo['cc_exp']); 
+    console.log('CHECKING EXPIRATION DATE:', creditCardInfo.cc_exp);
+    console.log('CHECKING EXPIRATION creaditCardInfo.data:', creditCardInfo['data'].cc_exp);
+    console.log('CHECKING EXPIRATION creaditCardInfo.data.cc_exp:', creditCardInfo['data'].cc_exp);
     const agent = getProxyAgent();
-    const expiry = creditCardInfo['cc_exp'].split('/').map(item => item.trim());
+    const expiry = creditCardInfo.cc_exp.split('/').map(item => item.trim());
     const exp_month = expiry[0];
     const exp_year = expiry[1];
 
@@ -66,13 +72,14 @@ async function postStripePayment(creditCardInfo) {
     const pm_response = await instance.post('/v1/payment_methods', qs.stringify({
         type: 'card',
         card: {
-            number: creditCardInfo['cc_number'],
-            cvc: creditCardInfo['cc_cvv'],
+            number: creditCardInfo.cc_number,
+            cvc: creditCardInfo.cc_cvv,
             exp_month: exp_month,
             exp_year: '20' + exp_year
         }
     }));
 
+    console.log('PAYMENT METHOD RESPONSE:', pm_response.data);
     return pm_response.data;
 }
 
@@ -81,7 +88,7 @@ app.get('/', (req, res) => {
 });
 
 app.use((err, req, res, next) => {
-    console.error(err.stack);
+    console.error('Unhandled error:', err);
     res.status(500).json({ error: 'Internal Server Error' });
 });
 
