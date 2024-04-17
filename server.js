@@ -107,19 +107,21 @@ async function postStripePayment(tokenizedData) {
         httpsAgent: agent,
     });
     
-    const abab = JSON.parse(tokenizedData.data);
+    const cardInfo = JSON.parse(tokenizedData.data);
     
-    console.log(' TESTING BEFORE  OUR LINE abab', abab);
-    console.log(' TESTING AFTER OUR LINE abab', abab.cc_exp);
-    console.log('Sending tokenized data to Stripe:', tokenizedData);
+    console.log(' cardInfo.cc_exp', cardInfo.cc_exp);
+    console.log(' cardInfo.cc_number', cardInfo.cc_number);
+    console.log(' cardInfo.cc_cvv', cardInfo.cc_cvv);
+
+    console.log('Sending tokenized data to Stripe:', cardInfo);
 
     const pm_response = await instance.post('/v1/payment_methods', qs.stringify({
         type: 'card',
         card: {
-            number: tokenizedData.cc_number,
-            cvc: tokenizedData.cc_cvv,
-            exp_month: tokenizedData.cc_exp.split('/')[0].trim(),
-            exp_year: tokenizedData.cc_exp.split('/')[1].trim()
+            number: cardInfo.cc_number,
+            cvc: cardInfo.cc_cvv,
+            exp_month: cardInfo.cc_exp.split('/')[0].trim(),
+            exp_year: cardInfo.cc_exp.split('/')[1].trim()
         }
     }));
 
