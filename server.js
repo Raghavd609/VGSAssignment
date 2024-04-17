@@ -43,8 +43,26 @@ app.post('/process-payment', async (req, res, next) => {
 
 // Function to post payment to Stripe API
 async function postStripePayment(creditCardInfo) {
+    console.log('Credit card info:', creditCardInfo); // Log credit card info for debugging
+
+    // Ensure that the creditCardInfo object has the expected structure
+    if (!creditCardInfo || !creditCardInfo['card-expiration-date']) {
+        throw new Error('Invalid credit card information');
+    }
+
+    // Split the expiration date to extract month and year
+    const expiry = creditCardInfo['card-expiration-date'].split('/');
+
+    // Validate that expiry has both month and year
+    if (expiry.length !== 2 || !expiry[0] || !expiry[1]) {
+        throw new Error('Invalid card expiration date format');
+    }
+
+    // Trim whitespace from month and year
+    const exp_month = expiry[0].trim();
+    const exp_year = expiry[1].trim();
+
     const agent = getProxyAgent();
-    const expiry = creditCardInfo['card-expiration-date'] ? creditCardInfo['card-expiration-date'].split('/') : ['', ''];
     const buff = Buffer.from(STRIPE_KEY + ":");
     const base64Auth = buff.toString('base64');
 
@@ -61,8 +79,8 @@ async function postStripePayment(creditCardInfo) {
         card: {
             number: creditCardInfo['card-number'],
             cvc: creditCardInfo['card-security-code'],
-            exp_month: expiry[0].trim(),
-            exp_year: expiry[1].trim()
+            exp_month: exp_month,
+            exp_year: exp_year
         }
     }));
     console.log('Payment method response:', pm_response.data);
