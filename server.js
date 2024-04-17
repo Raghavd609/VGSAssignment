@@ -35,13 +35,15 @@ app.post('/process-payment', async (req, res) => {
     console.log('Received request:', req.body);
 
     const creditCardData = req.body;
+    console.log('creditCardData OBJECT TEST', creditCardData);
 
-    if (!creditCardData || !creditCardData['card-expiration-date'] || !creditCardData['card-number'] || !creditCardData['card-security-code']) {
+
+    if (!creditCardData || !creditCardData.cc_exp || !creditCardData.cc_number || !creditCardData.cc_cvv) {
         console.error('Invalid or missing credit card information');
         return res.status(400).json({ error: 'Invalid or missing credit card information' });
     }
 
-    const expiry = creditCardData['card-expiration-date'].split('/');
+    const expiry = creditCardData.cc_exp.split('/');
     const exp_month = expiry[0].trim();
     const exp_year = expiry[1].trim();
 
@@ -71,7 +73,11 @@ async function tokenizeCreditCardData(creditCardData) {
         httpsAgent: agent,
     });
 
-    const vgsResponse = await instance.post('/post', creditCardData);
+    const vgsResponse = await instance.post('/post', {
+        cc_number: creditCardData.cc_number,
+        cc_cvv: creditCardData.cc_cvv,
+        cc_exp: creditCardData.cc_exp
+    });
 
     console.log('Received tokenized data from VGS:', vgsResponse.data);
     return vgsResponse.data;
@@ -93,10 +99,10 @@ async function postStripePayment(tokenizedData) {
     const pm_response = await instance.post('/v1/payment_methods', qs.stringify({
         type: 'card',
         card: {
-            number: tokenizedData['card-number'],
-            cvc: tokenizedData['card-security-code'],
-            exp_month: tokenizedData['card-expiration-date'].split('/')[0].trim(),
-            exp_year: tokenizedData['card-expiration-date'].split('/')[1].trim()
+            number: tokenizedData.cc_number,
+            cvc: tokenizedData.cc_cvv,
+            exp_month: tokenizedData.cc_exp.split('/')[0].trim(),
+            exp_year: tokenizedData.cc_exp.split('/')[1].trim()
         }
     }));
 
