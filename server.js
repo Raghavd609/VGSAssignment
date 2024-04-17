@@ -15,7 +15,6 @@ const STRIPE_KEY = 'sk_test_51Lrs6CK6opjUgeSmFHReX14eBMcbofCJrUOisGTC7ASpkfFMqD6
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Proxy configuration
 function getProxyAgent() {
     const vgs_outbound_url = `${VGS_VAULT_ID}.sandbox.verygoodproxy.com`;
     console.log('STEP 1: OUTBOUND - GOING TO THE OUTBOUND CALL PATH:', vgs_outbound_url);
@@ -29,10 +28,9 @@ function getProxyAgent() {
     });
 }
 
-// Handle payment processing
 app.post('/process-payment', async (req, res) => {
     const creditCardInfo = req.body;
-    console.log('RECEIVED CREDIT CARD INFO:', creditCardInfo); // Log received credit card info for debugging
+    console.log('RECEIVED CREDIT CARD INFO:', creditCardInfo);
 
     try {
         const paymentResponse = await postStripePayment(creditCardInfo);
@@ -43,15 +41,13 @@ app.post('/process-payment', async (req, res) => {
     }
 });
 
-// Function to post payment to Stripe API
 async function postStripePayment(creditCardInfo) {
-    console.log('INSIDE POST STRIPE PAYMENT CHECKING EXPIRATION DATE', creditCardInfo['cc_exp']); 
+    console.log('CHECKING EXPIRATION DATE:', creditCardInfo['cc_exp']); 
     const agent = getProxyAgent();
     const expiry = creditCardInfo['cc_exp'].split('/').map(item => item.trim());
     const exp_month = expiry[0];
     const exp_year = expiry[1];
 
-    // Validate the expiration month and year
     if (isNaN(exp_month) || exp_month < 1 || exp_month > 12 || isNaN(exp_year) || exp_year.length !== 2) {
         throw new Error("Expiration date is out of range or incorrectly formatted");
     }
@@ -67,28 +63,28 @@ async function postStripePayment(creditCardInfo) {
         httpsAgent: agent,
     });
 
-    console.log('SENDING PAYMENT METHOD DATA TO STRIPE:', creditCardInfo);
     const pm_response = await instance.post('/v1/payment_methods', qs.stringify({
         type: 'card',
         card: {
             number: creditCardInfo['cc_number'],
             cvc: creditCardInfo['cc_cvv'],
             exp_month: exp_month,
-            exp_year: '20' + exp_year  // Assuming the year is provided in two digits
+            exp_year: '20' + exp_year
         }
     }));
-
-    console.log('PAYMENT METHOD RESPONSE:', pm_response.data);
 
     return pm_response.data;
 }
 
-// Serve index.html for root URL
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Error handler middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);
-    res.status(500).json({ error:
+    res.status(500).json({ error: 'Internal Server Error' });
+});
+
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});
