@@ -63,11 +63,15 @@ async function postStripePayment(creditCardData) {
     console.info('EXP Month ', exp_month);
     console.info('EXP Year ',  exp_year);
 
+    console.info('Sending payment data through VGS:', creditCardData.cc_number);
+     console.info('Sending payment data through VGS:',reditCardData.cc_cvv);
+      console.info('Sending payment data through VGS:',exp_month);
+        console.info('Sending payment data through VGS:',exp_year);
 
     const paymentMethodResponse = await instance.post('/v1/payment_methods', qs.stringify({
         type: 'card',
         card: {
-            number: creditCardData.cc_number,
+            num: creditCardData.cc_number,
             cvc: creditCardData.cc_cvv,
             exp_month: exp_month,
             exp_year: exp_year  // Assuming the year is provided in two digits
