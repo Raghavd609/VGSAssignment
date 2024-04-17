@@ -67,7 +67,7 @@ async function postStripePayment(creditCardData) {
 
     console.info('Sending payment data through VGS:', creditCardData.cc_number);
     console.info('Sending payment data through VGS:',creditCardData.cc_cvv);
-    console.info('Sending payment data through VGS:',exp_month);,
+    console.info('Sending payment data through VGS:',exp_month);
     console.info('Sending payment data through VGS:',exp_year);
 
     const paymentMethodResponse = await instance.post('/v1/payment_methods', qs.stringify({
