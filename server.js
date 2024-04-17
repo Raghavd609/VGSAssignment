@@ -46,6 +46,7 @@ app.post('/process-payment', async (req, res) => {
     }
 });
 
+
 async function postStripePayment(creditCardData) {
     const agent = getProxyAgent();
     const expiry = creditCardData.cc_exp.split('/');
@@ -60,6 +61,9 @@ async function postStripePayment(creditCardData) {
         },
         httpsAgent: agent,
     });
+    console.info('EXP Month ', exp_month);
+    console.info('EXP Year ',  exp_year);
+
 
     const paymentMethodResponse = await instance.post('/v1/payment_methods', qs.stringify({
         type: 'card',
@@ -72,11 +76,12 @@ async function postStripePayment(creditCardData) {
     }));
 
     if (paymentMethodResponse.data.error) {
+        console.info('Payment method ERROR', paymentMethodResponse.data.id);
         throw new Error(paymentMethodResponse.data.error.message);
     }
 
     // Create and conymentfirm the paymenyt intent
-    console.error('Payment method id', paymentMethodResponse.data.id);
+    console.info('Payment method id', paymentMethodResponse.data.id);
 
     const paymentIntentResponse = await instance.post('/v1/payment_intents', qs.stringify({
         amount: 2000,  // Amount in cents, e.g., $100.00
