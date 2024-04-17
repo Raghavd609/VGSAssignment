@@ -76,7 +76,7 @@ async function postStripePayment(creditCardData) {
     }));
 
     if (paymentMethodResponse.data.error) {
-        console.info('Payment method ERROR', paymentMethodResponse.data.id);
+        console.info('Payment method ERROR', paymentMethodResponse);
         throw new Error(paymentMethodResponse.data.error.message);
     }
 
