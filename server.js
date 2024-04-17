@@ -32,14 +32,14 @@ function getProxyAgent() {
 // Handle payment processing
 app.post('/process-payment', async (req, res, next) => {
     const creditCardInfo = req.body;
+    console.log('RECEIVED CREDIT CARD INFO:', creditCardInfo); // Log received credit card info for debugging
 
     try {
-        console.log('RECEIVED CREDIT CARD INFO:', creditCardInfo); // Log received credit card info for debugging
         const paymentResponse = await postStripePayment(creditCardInfo);
         res.status(200).json(paymentResponse);
     } catch (error) {
         console.error('ERROR PROCESSING PAYMENT:', error);
-        next(error); // Pass error to the error handling middleware
+        res.status(500).json({ error: error.message });
     }
 });
 
@@ -47,6 +47,13 @@ app.post('/process-payment', async (req, res, next) => {
 async function postStripePayment(creditCardInfo) {
     const agent = getProxyAgent();
     const expiry = creditCardInfo['cc_exp'] ? creditCardInfo['cc_exp'].split('/') : ['', ''];
+    const exp_month = expiry[0].trim();
+    const exp_year = expiry[1].trim();
+
+    if (!exp_month || !exp_year) {
+        throw new Error("Invalid expiration date");
+    }
+
     const buff = Buffer.from(STRIPE_KEY + ":");
     const base64Auth = buff.toString('base64');
 
@@ -64,10 +71,11 @@ async function postStripePayment(creditCardInfo) {
         card: {
             number: creditCardInfo['cc_number'],
             cvc: creditCardInfo['cc_cvv'],
-            exp_month: expiry[0].trim(),
-            exp_year: expiry[1].trim()
+            exp_month: exp_month,
+            exp_year: exp_year
         }
     }));
+
     console.log('PAYMENT METHOD RESPONSE:', pm_response.data);
 
     console.log('SENDING PAYMENT INTENT DATA TO STRIPE:', pm_response.data);
@@ -77,6 +85,7 @@ async function postStripePayment(creditCardInfo) {
         payment_method: pm_response.data.id,
         confirm: true
     }));
+
     console.log('PAYMENT INTENT RESPONSE:', pi_response.data);
 
     return pi_response.data;
