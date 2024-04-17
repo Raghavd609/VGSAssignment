@@ -15,12 +15,6 @@ app.post('/process-payment', async (req, res) => {
     // Attempt to parse the data if it's a string, otherwise use it directly if it's already an object
     const creditCardData = typeof req.body.data === 'string' ? JSON.parse(req.body.data) : req.body.data;
     
-    
-        console.log(' PROCESS PAYMENT CHECKING EXPIRATION DATE:', creditCardData.cc_exp);
-    console.log(' PROCESS PAYMENT CHECKING EXPIRATION creaditCardInfo.data:', creditCardData['data']);
-    console.log(' PROCESS PAYMENT CHECKING EXPIRATION creaditCardInfo.data.cc_number: TEST ', creditCardData['data']['cc_number']);
-    console.log(' PROCESS PAYMENT CHECKING EXPIRATION creaditCardInfo.data.cc_exp:', creditCardData['data'].cc_exp);
-
 
     if (!creditCardData || !creditCardData.cc_exp || !creditCardData.cc_number || !creditCardData.cc_cvv) {
         console.error('Invalid or missing credit card information');
